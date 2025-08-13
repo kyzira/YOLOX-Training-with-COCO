@@ -1,3 +1,152 @@
+# How to install YOLOX and train it on custom data
+
+This Guide shows how to install, train and use the [object detection model YOLOX](https://github.com/Megvii-BaseDetection/YOLOX).
+
+## Installation
+
+First lets set up a conda environment.
+
+```bash
+conda create -n YOLOX python=3.10
+conda activate YOLOX
+```
+
+Then we can download YOLOX and install its dependencies.
+
+```bash
+git clone https://github.com/Megvii-BaseDetection/YOLOX.git
+cd YOLOX
+pip3 install -v -e .
+```
+
+The newer pycocotools version threw up following error: `KeyError: 'info'`. To mitigate this downgrade to pycocotools 2.0.8:
+
+```bash
+pip install pycocotools==2.0.8
+```
+
+## Prepare Dataset
+
+Your Dataset needs to be in the COCO-Format. You need images seperated into a train and a val folder and you need corresponding annotation ```.json``` files.
+You need to put them into the datasets folder in the base directory of YOLOX. The expected structure is:
+
+```folder
+    YOLOX/
+    └── datasets/
+        └── COCO/
+            ├── annotations/
+            │   ├── instances_train2017.json
+            │   └── instances_val2017.json
+            ├── train2017/
+            │   ├── image1.jpg
+            │   ├── image2.jpg
+            │   └── ...
+            └── val2017/
+                ├── imageA.jpg
+                ├── imageB.jpg
+                └── ...
+```
+
+Be sure to name your annotation files and folders exactly like this.
+
+## Start Training
+
+To start the training you can [look at their tutorial](https://github.com/Megvii-BaseDetection/YOLOX/blob/main/docs/train_custom_data.md), but here i will show you an easier description.
+First you will need a model you want to train. Download it from here:
+
+- [YOLOX-Nano](https://github.com/Megvii-BaseDetection/YOLOX/releases/download/0.1.1rc0/yolox_nano.pth)
+- [YOLOX-Tiny](https://github.com/Megvii-BaseDetection/YOLOX/releases/download/0.1.1rc0/yolox_tiny.pth)
+- [YOLOX-s](https://github.com/Megvii-BaseDetection/YOLOX/releases/download/0.1.1rc0/yolox_s.pth)
+- [YOLOX-m](https://github.com/Megvii-BaseDetection/YOLOX/releases/download/0.1.1rc0/yolox_m.pth)
+- [YOLOX-l](https://github.com/Megvii-BaseDetection/YOLOX/releases/download/0.1.1rc0/yolox_l.pth)
+- [YOLOX-x](https://github.com/Megvii-BaseDetection/YOLOX/releases/download/0.1.1rc0/yolox_x.pth)
+
+I used ``yolox_m.pth`` for this Guide
+
+Put the downloaded ```yolox_XXX.pth``` into the base directory of YOLOX.
+
+Now we will prepare a `exp` file. This is like the settings for your training. Go into `YOLOX/exps/default` and copy the corresponding `yolox_XXX.py` File to your downloaded model.
+Paste it into `YOLOX/exps`. Now open the file and here you can edit the parameters. Keep the ``depth`` and ``width`` the same, They differ from model size.
+Copy the rest of the settings i used into your file. After that you can change the parameters.
+
+Here is an example of the ``exp`` file I used:
+
+```python
+#!/usr/bin/env python3
+# -*- coding:utf-8 -*-
+# Copyright (c) Megvii, Inc. and its affiliates.
+
+#
+# DONT CHANGE THIS
+#
+
+import os
+
+from yolox.exp import Exp as MyExp
+
+
+class Exp(MyExp):
+    def __init__(self):
+        super(Exp, self).__init__()
+        self.depth = 0.67
+        self.width = 0.75
+        self.exp_name = os.path.split(os.path.realpath(__file__))[1].split(".")[0]
+
+        #
+        # FROM HERE YOU CAN CHANGE
+        #
+
+        self.data_dir = "datasets/COCO"
+        self.train_ann = "instances_train2017.json"
+        self.val_ann = "instances_val2017.json"
+
+        self.num_classes = 6
+
+        self.max_epoch = 50
+        self.data_num_workers = 4
+        self.eval_interval = 1
+
+```
+
+Now we can start the training using:
+
+```bash
+python tools/train.py -f exps/yolox_m.py -d 1 -b 9 --fp16 -o -c yolox_m.pth
+```
+
+- -f: Here we will need to put the path to our exp file we just created.
+- -d: This is the amount of GPUs you want to use.
+- -b: This is the batchsize, e.g. the amount of images you want to load at once. Adapt it to your available VRAM. (I used a batchsize of 9 with 12 GB of VRAM)
+- -c: Here you put in the path to the downloaded model. As it is in the main directory, it is enough to just put in its filename.
+
+## Export to onnx
+
+```bash
+python3 tools/export_onnx.py --output-name trained_yolox.onnx -f exps/yolox_m.py -c your_yolox.pth
+```
+
+## Inference
+
+```bash
+python3 onnx_inference.py -m <ONNX_MODEL_PATH> -i <IMAGE_PATH> -o <OUTPUT_DIR> -s 0.3 --input_shape 640,640
+```
+
+
+
+
+
+
+
+
+
+
+
+
+
+---
+## Original Readme
+
+
 <div align="center"><img src="assets/logo.png" width="350"></div>
 <img src="assets/demo.png" >
 
