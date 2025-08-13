@@ -122,7 +122,7 @@ python tools/train.py -f exps/yolox_m.py -d 1 -b 9 --fp16 -o -c yolox_m.pth
 ## Export to onnx
 
 ```bash
-python3 tools/export_onnx.py --output-name trained_yolox.onnx -f exps/yolox_m.py -c your_yolox.pth
+python tools/demo.py video -f exps/yolox-m.py -c YOLOX_outputs/yolox_m/best_ckpt.pth --path C:/Users/K3000/Videos/test2.mp4 --conf 0.25 --nms 0.45 --tsize 640 --save_result --device gpu
 ```
 
 ## Inference
