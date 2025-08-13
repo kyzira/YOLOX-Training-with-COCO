@@ -14,7 +14,7 @@ conda activate YOLOX
 Then we can download YOLOX and install its dependencies.
 
 ```bash
-git clone https://github.com/Megvii-BaseDetection/YOLOX.git
+git clone https://github.com/kyzira/YOLOX-Training-with-COCO.git
 cd YOLOX
 pip3 install -v -e .
 ```
