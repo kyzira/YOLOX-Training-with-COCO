@@ -121,16 +121,29 @@ python tools/train.py -f exps/yolox_m.py -d 1 -b 9 --fp16 -o -c yolox_m.pth
 
 ## Export to onnx
 
+First make sure, that the ONNX Runtime is installed:
+
+`pip install onnxruntime`
+
+then we can export our best checkpoint from training:
+
 ```bash
-python tools/demo.py video -f exps/yolox-m.py -c YOLOX_outputs/yolox_m/best_ckpt.pth --path C:/Users/K3000/Videos/test2.mp4 --conf 0.25 --nms 0.45 --tsize 640 --save_result --device gpu
+python tools/export_onnx.py --output-name trained_yolox.onnx -f exps/yolox_m.py -c YOLOX_outputs/yolox_m/best_ckpt.pth    
 ```
 
 ## Inference
 
+To run inference with your newly created onnx model you can use:
+
 ```bash
-python3 onnx_inference.py -m <ONNX_MODEL_PATH> -i <IMAGE_PATH> -o <OUTPUT_DIR> -s 0.3 --input_shape 640,640
+python demo/ONNXRuntime/onnx_inference.py -m trained_yolox.onnx -i "PATH TO YOUR IMAGE" -o "OUTPUT FOLDER" -s 0.3 --input_shape 640,640
 ```
 
+- -m / --model: Here we put the path to our ONNX model file.
+- -i / --image_path: Here we put the path to the input image we want to run inference on.
+- -o / --output_dir: This is the path to the directory where the output (e.g., processed images with detections) will be saved.
+- -s / --score_thr: This is the confidence score threshold. Detections with a lower score will be filtered out.
+- --input_shape: This defines the input resolution for the model in the format width,height. The image will be resized to this shape before inference.
 
 
 
